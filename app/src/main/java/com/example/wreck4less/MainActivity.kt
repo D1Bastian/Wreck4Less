@@ -8,54 +8,36 @@ import androidx.compose.runtime.*
 import com.example.wreck4less.ui.screens.*
 import com.example.wreck4less.ui.theme.Wreck4LessTheme
 
-/**
- * MainActivity manages the navigation state for the Wreck4Less application.
- * It coordinates transitions between the Customer flow and Driver flow.
- */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             Wreck4LessTheme {
+                var isLoggedIn by remember { mutableStateOf(false) }
+                var role by remember { mutableStateOf("customer") }
                 var currentView by remember { mutableStateOf("home") }
-                var role by remember { mutableStateOf("customer") } // "customer" or "driver"
 
-                // Handle back button behavior for deep navigation
-                BackHandler(enabled = currentView != "home") {
-                    currentView = when (currentView) {
-                        "details" -> "home"
-                        "pricing" -> "details"
-                        "payment" -> "pricing"
-                        else -> "home"
-                    }
+                // Global Back Navigation
+                BackHandler(enabled = isLoggedIn && currentView != "home") {
+                    currentView = "home"
                 }
 
-                if (role == "driver") {
-                    DriverDashboard(onSwitchRole = { role = "customer"; currentView = "home" })
+                if (!isLoggedIn) {
+                    AuthPortal(onLoginSuccess = { selectedRole ->
+                        role = selectedRole
+                        isLoggedIn = true
+                        currentView = "home"
+                    })
                 } else {
-                    when (currentView) {
-                        "home" -> CustomerHome(
-                            onStartRequest = { currentView = "details" },
-                            onSwitchRole = { role = "driver" }
+                    when (role) {
+                        "customer" -> CustomerSupportFlow(
+                            view = currentView,
+                            onNavigate = { currentView = it },
+                            onLogout = { isLoggedIn = false }
                         )
-                        "details" -> VehicleDetailsScreen(
-                            onNext = { currentView = "pricing" },
-                            onBack = { currentView = "home" }
-                        )
-                        "pricing" -> PricingOptionsScreen(
-                            onNext = { currentView = "payment" },
-                            onBack = { currentView = "details" }
-                        )
-                        "payment" -> PaymentScreen(
-                            onConfirm = { currentView = "searching" },
-                            onBack = { currentView = "pricing" }
-                        )
-                        "searching" -> SearchingScreen(
-                            onDriverAssigned = { currentView = "active_job" }
-                        )
-                        "active_job" -> ActiveJobScreen(
-                            onComplete = { currentView = "home" }
-                        )
+                        "manager" -> ManagerDashboard(onLogout = { isLoggedIn = false })
+                        "driver" -> DriverTerminal(onLogout = { isLoggedIn = false })
+                        "admin" -> AdminConsole(onLogout = { isLoggedIn = false })
                     }
                 }
             }
