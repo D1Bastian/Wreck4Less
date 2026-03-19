@@ -60,7 +60,14 @@ OSMDroid is used for all map screens (customer tracking, admin map, driver map, 
 
 ## Screenshots
 
-Add your latest screenshots to `docs/` and link them here for a polished presentation.
+| Screen | Preview |
+| --- | --- |
+| Auth Portal | ![Auth Portal](docs/screenshots/SignInScreen.png) |
+| Customer Support | ![Customer Support](docs/screenshots/WreckSreen1.png) |
+| Driver Fleet Portal | ![Driver Fleet Portal](docs/screenshots/DriverScreen1.png) |
+| Driver Menu | ![Driver Menu](docs/screenshots/DriverScreen2.png) |
+| Admin Overview | ![Admin Overview](docs/screenshots/AdminScreen1.png) |
+| Admin Panel Menu | ![Admin Panel Menu](docs/screenshots/AdminScreen2.png) |
 
 ---
 
