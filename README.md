@@ -1,4 +1,4 @@
-﻿![Wreck4Less Banner](docs/banner.svg)
+﻿![Wreck4Less Banner](docs/banner.png)
 
 # Wreck4Less
 
@@ -8,7 +8,7 @@ Private dispatch platform for towing operations with dedicated experiences for c
 
 - Role-based portals: Customer, Driver, Admin
 - Secure authentication with JWT and server-side password hashing
-- Dispatch lifecycle: request → approval → payment → tracking
+- Dispatch lifecycle: request -> approval -> payment -> tracking
 - Live location and map views (OSMDroid)
 - Driver online/offline state and nearby job discovery
 - Admin job management, reassignment, and export tools
