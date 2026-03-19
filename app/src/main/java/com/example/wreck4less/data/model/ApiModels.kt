@@ -122,3 +122,11 @@ data class AdminRateRequest(
 data class AdminCancelRequest(
     val reason: String? = null
 )
+
+data class DriverHistoryResponse(
+    val jobs: List<JobStatusResponse>
+)
+
+data class DriverNearbyResponse(
+    val jobs: List<JobStatusResponse>
+)

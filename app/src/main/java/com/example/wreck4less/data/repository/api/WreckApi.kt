@@ -10,6 +10,8 @@ import com.example.wreck4less.data.model.AdminExportResponse
 import com.example.wreck4less.data.model.AdminReassignRequest
 import com.example.wreck4less.data.model.AdminRateRequest
 import com.example.wreck4less.data.model.AdminCancelRequest
+import com.example.wreck4less.data.model.DriverHistoryResponse
+import com.example.wreck4less.data.model.DriverNearbyResponse
 import com.example.wreck4less.data.model.DriverAssignmentResponse
 import com.example.wreck4less.data.model.DriverUpdateRequest
 import com.example.wreck4less.data.model.DriverUpdateResponse
@@ -27,6 +29,7 @@ import retrofit2.http.GET
 import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface WreckApi {
 
@@ -105,4 +108,14 @@ interface WreckApi {
 
     @GET("api/v1/admin/export")
     suspend fun adminExport(): Response<AdminExportResponse>
+
+    @GET("api/v1/driver/history")
+    suspend fun driverHistory(): Response<DriverHistoryResponse>
+
+    @GET("api/v1/driver/nearby")
+    suspend fun driverNearby(
+        @Query("lat") lat: Double,
+        @Query("lng") lng: Double,
+        @Query("radius_m") radiusM: Int
+    ): Response<DriverNearbyResponse>
 }

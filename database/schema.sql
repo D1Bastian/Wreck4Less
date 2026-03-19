@@ -22,6 +22,7 @@ CREATE TABLE dispatch_requests (
     vehicle_model TEXT NOT NULL,
     vehicle_year VARCHAR(4) NOT NULL,
     damage_report TEXT,
+    contact_phone TEXT,
     location_label TEXT,
     location_lat DOUBLE PRECISION,
     location_lng DOUBLE PRECISION,

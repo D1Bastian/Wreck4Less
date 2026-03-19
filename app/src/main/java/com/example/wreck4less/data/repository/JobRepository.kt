@@ -83,6 +83,14 @@ class JobRepository {
         return RetrofitInstance.api.adminExport()
     }
 
+    suspend fun driverHistory(): Response<DriverHistoryResponse> {
+        return RetrofitInstance.api.driverHistory()
+    }
+
+    suspend fun driverNearby(lat: Double, lng: Double, radiusM: Int): Response<DriverNearbyResponse> {
+        return RetrofitInstance.api.driverNearby(lat, lng, radiusM)
+    }
+
     suspend fun findGasStations(lat: Double, lon: Double, radiusMeters: Int): List<GasStation> {
         val query = """
             [out:json];

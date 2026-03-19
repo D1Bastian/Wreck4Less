@@ -6,6 +6,7 @@ data class WreckIntel(
     val year: String,
     val damage_description: String,
     val image_keys: List<String>,
+    val contact_phone: String? = null,
     val location_label: String,
     val location_lat: Double? = null,
     val location_lng: Double? = null

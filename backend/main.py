@@ -8,6 +8,7 @@ import psycopg2.extras
 import uuid
 import csv
 import io
+import math
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
@@ -58,6 +59,7 @@ def _init_db() -> None:
         vehicle_model TEXT NOT NULL,
         vehicle_year TEXT NOT NULL,
         damage_report TEXT,
+        contact_phone TEXT,
         location_label TEXT,
         location_lat DOUBLE PRECISION,
         location_lng DOUBLE PRECISION,
@@ -74,6 +76,7 @@ def _init_db() -> None:
     CREATE INDEX IF NOT EXISTS idx_dispatch_status ON dispatch_requests(status);
     CREATE INDEX IF NOT EXISTS idx_dispatch_driver ON dispatch_requests(driver_id);
     ALTER TABLE dispatch_requests ADD COLUMN IF NOT EXISTS cancel_reason TEXT;
+    ALTER TABLE dispatch_requests ADD COLUMN IF NOT EXISTS contact_phone TEXT;
     """
     with _get_conn() as conn:
         with conn.cursor() as cur:
@@ -220,6 +223,7 @@ class WreckIntel(BaseModel):
     model: str = Field(min_length=1, max_length=60)
     year: str = Field(min_length=4, max_length=4)
     damage_description: str = Field(min_length=1, max_length=500)
+    contact_phone: Optional[str] = None
     image_keys: List[str] = Field(default_factory=list, max_length=4)
     location_label: str = Field(min_length=1, max_length=120)
     location_lat: Optional[float] = None
@@ -319,6 +323,10 @@ class DriverRosterEntry(BaseModel):
     active_job_id: Optional[str]
 
 
+class DriverHistoryResponse(BaseModel):
+    jobs: List[Dict]
+
+
 class ReassignDriverRequest(BaseModel):
     driver_id: str
 
@@ -357,6 +365,7 @@ def _job_payload(row: Dict) -> Dict:
             "location_label": row["location_label"],
             "location_lat": row["location_lat"],
             "location_lng": row["location_lng"],
+            "contact_phone": row.get("contact_phone"),
         },
         "created_at": created_at,
         "confirmed_rate": row["approved_rate"] or 0.0,
@@ -364,6 +373,17 @@ def _job_payload(row: Dict) -> Dict:
         "driver_location": driver_location,
         "cancel_reason": row.get("cancel_reason"),
     }
+
+
+def _distance_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    r = 6371000.0
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    d_phi = math.radians(lat2 - lat1)
+    d_lambda = math.radians(lon2 - lon1)
+    a = math.sin(d_phi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(d_lambda / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return r * c
 
 
 def _fetch_job(job_id: str) -> Dict:
@@ -461,9 +481,9 @@ async def submit_wreck_intel(
                 """
                 INSERT INTO dispatch_requests (
                     id, customer_id, vehicle_make, vehicle_model, vehicle_year,
-                    damage_report, location_label, location_lat, location_lng,
+                    damage_report, contact_phone, location_label, location_lat, location_lng,
                     status, created_at
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     job_id,
@@ -472,6 +492,7 @@ async def submit_wreck_intel(
                     intel.model,
                     intel.year,
                     intel.damage_description,
+                    intel.contact_phone,
                     intel.location_label,
                     intel.location_lat,
                     intel.location_lng,
@@ -787,6 +808,45 @@ async def admin_export(user: Dict = Depends(require_roles("admin"))):
             ]
         )
     return {"csv": output.getvalue()}
+
+
+@app.get("/api/v1/driver/history")
+async def driver_history(user: Dict = Depends(require_roles("driver"))):
+    with _get_conn() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                "SELECT * FROM dispatch_requests WHERE driver_id = %s ORDER BY created_at DESC",
+                (user["id"],),
+            )
+            rows = cur.fetchall()
+    return {"jobs": [_job_payload(row) for row in rows]}
+
+
+@app.get("/api/v1/driver/nearby")
+async def driver_nearby(
+    lat: float,
+    lng: float,
+    radius_m: int = 5000,
+    user: Dict = Depends(require_roles("driver")),
+):
+    with _get_conn() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                """
+                SELECT * FROM dispatch_requests
+                WHERE status IN ('AWAITING_OPS','RATE_APPROVED')
+                AND location_lat IS NOT NULL
+                AND location_lng IS NOT NULL
+                ORDER BY created_at DESC
+                """
+            )
+            rows = cur.fetchall()
+    nearby = []
+    for row in rows:
+        distance = _distance_m(lat, lng, row["location_lat"], row["location_lng"])
+        if distance <= radius_m:
+            nearby.append(row)
+    return {"jobs": [_job_payload(row) for row in nearby]}
 
 
 @app.get("/api/v1/customer/profile", response_model=CustomerProfile)

@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -56,6 +57,7 @@ val BrandRed = Color(0xFFFF0000)
 val PureBlack = Color(0xFF000000)
 val SurfaceZinc = Color(0xFF121212)
 val CardGray = Color(0xFF1C1C1E)
+val ScreenTitleSize = 20.sp
 
 enum class UserRole { CUSTOMER, MANAGER, DRIVER, ADMIN }
 
@@ -91,35 +93,14 @@ fun WreckerHeader(
     onBack: () -> Unit,
     onMenu: () -> Unit
 ) {
-    TopAppBar(
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = PureBlack,
-            titleContentColor = Color.White
-        ),
-        title = {
-            Column {
-                Text(
-                    "WRECK4LESS",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Black,
-                    color = BrandRed,
-                    letterSpacing = 1.sp
-                )
-                Text(
-                    userName.uppercase(Locale.getDefault()),
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Gray
-                )
-                Text(
-                    title,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Color.White
-                )
-            }
-        },
-        navigationIcon = {
+    Surface(color = PureBlack) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             IconButton(onClick = if (showBack) onBack else onMenu) {
                 Icon(
                     if (showBack) Icons.AutoMirrored.Filled.ArrowBack else Icons.Default.Menu,
@@ -127,13 +108,42 @@ fun WreckerHeader(
                     tint = BrandRed
                 )
             }
-        },
-        actions = {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 4.dp)
+            ) {
+                Text(
+                    "WRECK4LESS",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Black,
+                    color = BrandRed,
+                    letterSpacing = 1.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    userName.uppercase(Locale.getDefault()),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Gray,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    title,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = BrandRed,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
             IconButton(onClick = { /* Notifications */ }) {
                 Icon(Icons.Default.Notifications, null, tint = Color.DarkGray)
             }
         }
-    )
+    }
 }
 // --- AUTHENTICATION & ROLE SELECTION ---
 
@@ -315,6 +325,8 @@ fun CustomerSupportFlow(
     var jobState by remember { mutableStateOf<CustomerJobState?>(null) }
     var history by remember { mutableStateOf<List<JobStatusResponse>>(emptyList()) }
     var historyLoading by remember { mutableStateOf(false) }
+    var nearbyJobs by remember { mutableStateOf<List<JobStatusResponse>>(emptyList()) }
+    var nearbyLoading by remember { mutableStateOf(false) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     var manageJob by remember { mutableStateOf<JobStatusResponse?>(null) }
     var exportCsv by remember { mutableStateOf<String?>(null) }
@@ -349,36 +361,45 @@ fun CustomerSupportFlow(
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet(containerColor = PureBlack) {
-                Spacer(Modifier.height(24.dp))
-                Text(
-                    "WRECK4LESS",
-                    color = BrandRed,
-                    fontWeight = FontWeight.Black,
-                    modifier = Modifier.padding(horizontal = 24.dp)
-                )
-                Text(
-                    session.displayName,
-                    color = Color.White,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
-                )
-                Spacer(Modifier.height(16.dp))
-                DrawerItem("Account", Icons.Default.Person) {
-                    view = "account"
-                    scope.launch { drawerState.close() }
-                }
-                DrawerItem("In Progress", Icons.Default.Timelapse) {
-                    view = "inprogress"
-                    scope.launch { drawerState.close() }
-                }
-                DrawerItem("Past Wrecks", Icons.Default.History) {
-                    view = "past"
-                    scope.launch { drawerState.close() }
-                }
-                DrawerItem("Sign Out", Icons.AutoMirrored.Filled.Logout) {
-                    scope.launch { drawerState.close() }
-                    onLogout()
+            ModalDrawerSheet {
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .widthIn(max = 280.dp)
+                        .background(PureBlack)
+                        .padding(horizontal = 12.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Spacer(Modifier.height(24.dp))
+                    Text(
+                        "WRECK4LESS",
+                        color = BrandRed,
+                        fontWeight = FontWeight.Black,
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+                    Text(
+                        session.displayName,
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    DrawerItem("Account", Icons.Default.Person) {
+                        view = "account"
+                        scope.launch { drawerState.close() }
+                    }
+                    DrawerItem("In Progress", Icons.Default.Timelapse) {
+                        view = "inprogress"
+                        scope.launch { drawerState.close() }
+                    }
+                    DrawerItem("Past Wrecks", Icons.Default.History) {
+                        view = "past"
+                        scope.launch { drawerState.close() }
+                    }
+                    DrawerItem("Sign Out", Icons.AutoMirrored.Filled.Logout) {
+                        scope.launch { drawerState.close() }
+                        onLogout()
+                    }
                 }
             }
         }
@@ -387,7 +408,7 @@ fun CustomerSupportFlow(
             containerColor = PureBlack,
             topBar = {
                 WreckerHeader(
-                    title = if (view == "home") "Support Hub" else view.uppercase(Locale.getDefault()),
+                title = if (view == "home") "Support" else view.uppercase(Locale.getDefault()),
                     userName = session.displayName,
                     showBack = view != "home",
                     onBack = { view = "home" },
@@ -462,6 +483,7 @@ fun CustomerSupportFlow(
 @Composable
 fun CustomerHome(onNavigate: (String) -> Unit, onLogout: () -> Unit) {
     Column(Modifier.fillMaxSize().padding(24.dp)) {
+        Spacer(Modifier.height(20.dp))
         Card(
             onClick = { onNavigate("form") },
             shape = RoundedCornerShape(32.dp),
@@ -517,6 +539,7 @@ fun WreckRequestForm(
     var model by remember { mutableStateOf("") }
     var year by remember { mutableStateOf("") }
     var damage by remember { mutableStateOf("") }
+    var contactPhone by remember { mutableStateOf("") }
     var locationLabel by remember { mutableStateOf("") }
     var locationLat by remember { mutableStateOf<Double?>(null) }
     var locationLng by remember { mutableStateOf<Double?>(null) }
@@ -595,6 +618,13 @@ fun WreckRequestForm(
             )
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(
+                value = contactPhone, onValueChange = { contactPhone = it },
+                label = { Text("Contact Phone") },
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = BrandRed, focusedLabelColor = BrandRed)
+            )
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(
                 value = locationLabel, onValueChange = { locationLabel = it }, label = { Text("Location") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = BrandRed, focusedLabelColor = BrandRed)
@@ -611,7 +641,7 @@ fun WreckRequestForm(
             }
             Spacer(Modifier.height(20.dp))
 
-            Text("Photos (optional)", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+            Text("Photos (required)", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
             Spacer(Modifier.height(8.dp))
             Button(
                 onClick = { imagePicker.launch("image/*") },
@@ -631,8 +661,12 @@ fun WreckRequestForm(
 
             Button(
                 onClick = {
-                    if (make.isBlank() || model.isBlank() || year.isBlank() || damage.isBlank() || locationLabel.isBlank()) {
+                    if (make.isBlank() || model.isBlank() || year.isBlank() || damage.isBlank() || locationLabel.isBlank() || contactPhone.isBlank()) {
                         scope.launch { snackbarHostState.showSnackbar("Please complete all fields.") }
+                        return@Button
+                    }
+                    if (imageUris.isEmpty()) {
+                        scope.launch { snackbarHostState.showSnackbar("Please add up to 3 images.") }
                         return@Button
                     }
                     isLoading = true
@@ -645,6 +679,7 @@ fun WreckRequestForm(
                                     year = year,
                                     damage_description = damage,
                                     image_keys = imageUris.map { it.toString() },
+                                    contact_phone = contactPhone,
                                     location_label = locationLabel,
                                     location_lat = locationLat,
                                     location_lng = locationLng
@@ -1077,7 +1112,7 @@ fun CustomerAccountScreen(
     val savedName = SecureStorage.getCardName()
 
     Column(Modifier.fillMaxSize().padding(24.dp)) {
-        Text("ACCOUNT", color = Color.White, fontWeight = FontWeight.Black, fontSize = 20.sp)
+        Text("ACCOUNT", color = BrandRed, fontWeight = FontWeight.Black, fontSize = ScreenTitleSize)
         Spacer(Modifier.height(12.dp))
         Card(colors = CardDefaults.cardColors(containerColor = CardGray)) {
             Column(Modifier.padding(16.dp)) {
@@ -1145,7 +1180,7 @@ fun CustomerAccountScreen(
 @Composable
 fun PastWrecksScreen(history: List<JobStatusResponse>, isLoading: Boolean) {
     Column(Modifier.fillMaxSize().padding(24.dp)) {
-        Text("PAST WRECKS", color = Color.White, fontWeight = FontWeight.Black, fontSize = 20.sp)
+        Text("PAST WRECKS", color = BrandRed, fontWeight = FontWeight.Black, fontSize = ScreenTitleSize)
         Spacer(Modifier.height(12.dp))
         if (isLoading) {
             LinearProgressIndicator(color = BrandRed, modifier = Modifier.fillMaxWidth())
@@ -1177,7 +1212,7 @@ fun InProgressScreen(
     onOpenTracking: (JobStatusResponse) -> Unit
 ) {
     Column(Modifier.fillMaxSize().padding(24.dp)) {
-        Text("IN PROGRESS", color = Color.White, fontWeight = FontWeight.Black, fontSize = 20.sp)
+        Text("IN PROGRESS", color = BrandRed, fontWeight = FontWeight.Black, fontSize = ScreenTitleSize)
         Spacer(Modifier.height(12.dp))
         if (isLoading) {
             LinearProgressIndicator(color = BrandRed, modifier = Modifier.fillMaxWidth())
@@ -1497,8 +1532,17 @@ fun AddCardDialog(
 @Composable
 fun DriverDashboard(session: UserSession, repository: JobRepository, onLogout: () -> Unit) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     var assignment by remember { mutableStateOf<JobStatusResponse?>(null) }
     var isLoading by remember { mutableStateOf(true) }
+    var statusMessage by remember { mutableStateOf<String?>(null) }
+    var isOnline by remember { mutableStateOf(true) }
+    var view by remember { mutableStateOf("active") }
+    var history by remember { mutableStateOf<List<JobStatusResponse>>(emptyList()) }
+    var historyLoading by remember { mutableStateOf(false) }
+    var nearbyJobs by remember { mutableStateOf<List<JobStatusResponse>>(emptyList()) }
+    var nearbyLoading by remember { mutableStateOf(false) }
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     LaunchedEffect(Unit) {
         try {
@@ -1512,77 +1556,302 @@ fun DriverDashboard(session: UserSession, repository: JobRepository, onLogout: (
         isLoading = false
     }
 
-    Scaffold(
-        containerColor = PureBlack,
-        topBar = { WreckerHeader("Fleet Portal", session.displayName, false, {}, {}) }
-    ) { padding ->
-        Column(Modifier.padding(padding).padding(24.dp)) {
-            if (isLoading) {
-                LinearProgressIndicator(color = BrandRed, modifier = Modifier.fillMaxWidth())
-            } else if (assignment == null) {
-                Text("NO ASSIGNED JOBS", color = Color.White, fontWeight = FontWeight.Black)
-                Text("Stand by for dispatch.", color = Color.Gray)
-            } else {
-                val job = assignment!!
-                Card(colors = CardDefaults.cardColors(containerColor = CardGray)) {
-                    Column(Modifier.padding(24.dp)) {
-                        Text("ACTIVE DISPATCH", color = BrandRed, fontWeight = FontWeight.Black)
-                        Text(job.intel.location_label, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        Text("Vehicle: ${job.intel.make} ${job.intel.model} (${job.intel.year})", color = Color.Gray, fontSize = 12.sp)
-                        Spacer(Modifier.height(16.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Button(
-                                onClick = {
-                                    scope.launch {
-                                        try {
-                                            repository.driverUpdate(DriverUpdateRequest(job.job_id, "EN_ROUTE"))
-                                        } catch (_: Exception) {
-                                            // Ignore transient network errors in driver status updates.
-                                        }
-                                    }
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = BrandRed),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text("EN ROUTE", color = PureBlack, fontWeight = FontWeight.Black, fontSize = 10.sp)
+    fun refreshHistory() {
+        historyLoading = true
+        scope.launch {
+            try {
+                val response = repository.driverHistory()
+                if (response.isSuccessful && response.body() != null) {
+                    history = response.body()!!.jobs
+                }
+            } catch (_: Exception) {
+                history = emptyList()
+            }
+            historyLoading = false
+        }
+    }
+
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                if (location != null) {
+                    scope.launch {
+                        nearbyLoading = true
+                        try {
+                            val response = repository.driverNearby(location.latitude, location.longitude, 8000)
+                            if (response.isSuccessful && response.body() != null) {
+                                nearbyJobs = response.body()!!.jobs
                             }
-                            Button(
-                                onClick = {
-                                    scope.launch {
-                                        try {
-                                            repository.driverUpdate(DriverUpdateRequest(job.job_id, "ARRIVED"))
-                                        } catch (_: Exception) {
-                                            // Ignore transient network errors in driver status updates.
+                        } catch (_: Exception) {
+                            nearbyJobs = emptyList()
+                        }
+                        nearbyLoading = false
+                    }
+                }
+            }
+        }
+    }
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .widthIn(max = 280.dp)
+                        .background(PureBlack)
+                        .padding(horizontal = 12.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Spacer(Modifier.height(24.dp))
+                    Text("DRIVER MENU", color = BrandRed, fontWeight = FontWeight.Black)
+                    Spacer(Modifier.height(8.dp))
+                    DrawerItem("Active Job", Icons.Default.Timelapse) {
+                        view = "active"
+                        scope.launch { drawerState.close() }
+                    }
+                    DrawerItem("Nearby Requests", Icons.Default.Map) {
+                        view = "nearby"
+                        scope.launch { drawerState.close() }
+                    }
+                    DrawerItem("Past Jobs", Icons.Default.History) {
+                        view = "history"
+                        refreshHistory()
+                        scope.launch { drawerState.close() }
+                    }
+                    DrawerItem("Sign Out", Icons.AutoMirrored.Filled.Logout) {
+                        scope.launch { drawerState.close() }
+                        onLogout()
+                    }
+                }
+            }
+        }
+    ) {
+        Scaffold(
+            containerColor = PureBlack,
+            topBar = { WreckerHeader("Fleet Portal", session.displayName, false, {}, { scope.launch { drawerState.open() } }) }
+        ) { padding ->
+            Column(Modifier.padding(padding).padding(24.dp)) {
+                when (view) {
+                    "active" -> {
+                        if (!isOnline) {
+                            Text("YOU ARE OFFLINE", color = BrandRed, fontWeight = FontWeight.Black)
+                            Text("Go online to receive dispatches.", color = Color.Gray)
+                        } else if (isLoading) {
+                            LinearProgressIndicator(color = BrandRed, modifier = Modifier.fillMaxWidth())
+                        } else if (assignment == null) {
+                            Text("NO ASSIGNED JOBS", color = BrandRed, fontWeight = FontWeight.Black)
+                            Text("Stand by for dispatch.", color = Color.Gray)
+                        } else {
+                            val job = assignment!!
+                            Card(colors = CardDefaults.cardColors(containerColor = CardGray)) {
+                                Column(Modifier.padding(24.dp)) {
+                                    Text("ACTIVE DISPATCH", color = BrandRed, fontWeight = FontWeight.Black)
+                                    Text(job.intel.location_label, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                                    Text("Vehicle: ${job.intel.make} ${job.intel.model} (${job.intel.year})", color = Color.Gray, fontSize = 12.sp)
+                                    Spacer(Modifier.height(8.dp))
+                                    Text(job.intel.damage_description, color = Color.Gray, fontSize = 11.sp)
+                                    Spacer(Modifier.height(16.dp))
+                                    val markers = listOfNotNull(
+                                        job.intel.location_lat?.let { lat ->
+                                            job.intel.location_lng?.let { lng ->
+                                                MapMarker("Pickup", lat, lng)
+                                            }
+                                        },
+                                        job.driver_location?.let { MapMarker("Driver", it.lat, it.lng) }
+                                    )
+                                    if (markers.isNotEmpty()) {
+                                        OsmMapView(
+                                            modifier = Modifier.fillMaxWidth().height(220.dp),
+                                            markers = markers,
+                                            center = GeoPoint(markers.first().lat, markers.first().lon)
+                                        )
+                                        Spacer(Modifier.height(12.dp))
+                                    }
+                                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        Button(
+                                            onClick = {
+                                                scope.launch {
+                                                    try {
+                                                        repository.driverUpdate(DriverUpdateRequest(job.job_id, "EN_ROUTE"))
+                                                        statusMessage = "Status: EN ROUTE"
+                                                    } catch (_: Exception) {
+                                                    }
+                                                }
+                                            },
+                                            colors = ButtonDefaults.buttonColors(containerColor = BrandRed),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Text("EN ROUTE", color = PureBlack, fontWeight = FontWeight.Black, fontSize = 10.sp)
+                                        }
+                                        Button(
+                                            onClick = {
+                                                scope.launch {
+                                                    try {
+                                                        repository.driverUpdate(DriverUpdateRequest(job.job_id, "ARRIVED"))
+                                                        statusMessage = "Status: ARRIVED"
+                                                    } catch (_: Exception) {
+                                                    }
+                                                }
+                                            },
+                                            colors = ButtonDefaults.buttonColors(containerColor = CardGray),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Text("ARRIVED", color = Color.White, fontSize = 10.sp)
+                                        }
+                                        Button(
+                                            onClick = {
+                                                scope.launch {
+                                                    try {
+                                                        repository.driverUpdate(DriverUpdateRequest(job.job_id, "COMPLETE"))
+                                                        statusMessage = "Status: COMPLETE"
+                                                    } catch (_: Exception) {
+                                                    }
+                                                }
+                                            },
+                                            colors = ButtonDefaults.buttonColors(containerColor = CardGray),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Text("COMPLETE", color = Color.White, fontSize = 10.sp)
                                         }
                                     }
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = CardGray),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text("ARRIVED", color = Color.White, fontSize = 10.sp)
+                                    if (statusMessage != null) {
+                                        Spacer(Modifier.height(8.dp))
+                                        Text(statusMessage!!, color = BrandRed, fontSize = 11.sp)
+                                    }
+                                    Spacer(Modifier.height(12.dp))
+                                    val contactPhone = job.intel.contact_phone ?: ""
+                                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        Button(
+                                            onClick = {
+                                                if (contactPhone.isNotBlank()) {
+                                                    val intent = Intent(Intent.ACTION_DIAL).apply {
+                                                        data = Uri.parse("tel:$contactPhone")
+                                                    }
+                                                    context.startActivity(intent)
+                                                }
+                                            },
+                                            colors = ButtonDefaults.buttonColors(containerColor = CardGray),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Icon(Icons.Default.Phone, null, tint = BrandRed)
+                                            Spacer(Modifier.width(6.dp))
+                                            Text("CALL", color = Color.White, fontSize = 10.sp)
+                                        }
+                                        Button(
+                                            onClick = {
+                                                if (contactPhone.isNotBlank()) {
+                                                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                                                        data = Uri.parse("sms:$contactPhone")
+                                                    }
+                                                    context.startActivity(intent)
+                                                }
+                                            },
+                                            colors = ButtonDefaults.buttonColors(containerColor = CardGray),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Icon(Icons.AutoMirrored.Filled.Message, null, tint = BrandRed)
+                                            Spacer(Modifier.width(6.dp))
+                                            Text("MESSAGE", color = Color.White, fontSize = 10.sp)
+                                        }
+                                    }
+                                }
                             }
-                            Button(
-                                onClick = {
-                                    scope.launch {
-                                        try {
-                                            repository.driverUpdate(DriverUpdateRequest(job.job_id, "COMPLETE"))
-                                        } catch (_: Exception) {
-                                            // Ignore transient network errors in driver status updates.
+                        }
+                    }
+                    "nearby" -> {
+                        Text("REQUESTS NEARBY", color = BrandRed, fontWeight = FontWeight.Black, fontSize = 18.sp)
+                        Spacer(Modifier.height(12.dp))
+                        Button(
+                            onClick = {
+                                locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = CardGray)
+                        ) {
+                            Icon(Icons.Default.MyLocation, null, tint = BrandRed)
+                            Spacer(Modifier.width(8.dp))
+                            Text("FIND NEARBY REQUESTS", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        if (nearbyLoading) {
+                            LinearProgressIndicator(color = BrandRed, modifier = Modifier.fillMaxWidth())
+                        } else if (nearbyJobs.isEmpty()) {
+                            Text("No nearby requests right now.", color = Color.Gray, fontSize = 12.sp)
+                        } else {
+                            val markers = nearbyJobs.mapNotNull { job ->
+                                val lat = job.intel.location_lat ?: return@mapNotNull null
+                                val lng = job.intel.location_lng ?: return@mapNotNull null
+                                MapMarker(job.job_id, lat, lng)
+                            }
+                            if (markers.isNotEmpty()) {
+                                OsmMapView(
+                                    modifier = Modifier.fillMaxWidth().height(220.dp),
+                                    markers = markers,
+                                    center = GeoPoint(markers.first().lat, markers.first().lon)
+                                )
+                                Spacer(Modifier.height(12.dp))
+                            }
+                            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                items(nearbyJobs) { job ->
+                                    Card(colors = CardDefaults.cardColors(containerColor = CardGray)) {
+                                        Column(Modifier.padding(12.dp)) {
+                                            Text(job.job_id, color = Color.White, fontWeight = FontWeight.Bold)
+                                            Text(job.intel.location_label, color = Color.Gray, fontSize = 11.sp)
+                                            Text(job.status.replace("_", " "), color = BrandRed, fontSize = 11.sp)
+                                            Spacer(Modifier.height(8.dp))
+                                            Button(
+                                                onClick = {
+                                                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                                                        data = Uri.parse("smsto:1-800-WRECK-HQ")
+                                                        putExtra("sms_body", "Request assignment for ${job.job_id}")
+                                                    }
+                                                    context.startActivity(intent)
+                                                },
+                                                colors = ButtonDefaults.buttonColors(containerColor = BrandRed)
+                                            ) {
+                                                Text("MESSAGE ADMIN", color = PureBlack, fontWeight = FontWeight.Black, fontSize = 10.sp)
+                                            }
                                         }
                                     }
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = CardGray),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text("COMPLETE", color = Color.White, fontSize = 10.sp)
+                                }
+                            }
+                        }
+                    }
+                    "history" -> {
+        Text("PAST JOBS", color = BrandRed, fontWeight = FontWeight.Black, fontSize = ScreenTitleSize)
+                        Spacer(Modifier.height(12.dp))
+                        if (historyLoading) {
+                            LinearProgressIndicator(color = BrandRed, modifier = Modifier.fillMaxWidth())
+                        } else if (history.isEmpty()) {
+                            Text("No completed jobs yet.", color = Color.Gray, fontSize = 12.sp)
+                        } else {
+                            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                items(history.filter { it.status == "COMPLETE" }) { job ->
+                                    Card(colors = CardDefaults.cardColors(containerColor = CardGray)) {
+                                        Column(Modifier.padding(12.dp)) {
+                                            Text(job.job_id, color = Color.White, fontWeight = FontWeight.Bold)
+                                            Text("${job.intel.make} ${job.intel.model} (${job.intel.year})", color = Color.Gray, fontSize = 11.sp)
+                                            Text(job.intel.location_label, color = Color.Gray, fontSize = 11.sp)
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
-            }
-            Spacer(Modifier.weight(1f))
-            Button(onClick = onLogout, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = CardGray)) {
-                Text("GO OFFLINE")
+
+                Spacer(Modifier.weight(1f))
+                Button(
+                    onClick = { isOnline = !isOnline },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = if (isOnline) CardGray else BrandRed)
+                ) {
+                    Text(if (isOnline) "GO OFFLINE" else "GO ONLINE", color = if (isOnline) Color.White else PureBlack)
+                }
             }
         }
     }
@@ -1596,6 +1865,9 @@ fun AdminConsole(repository: JobRepository, onLogout: () -> Unit) {
     var isLoading by remember { mutableStateOf(true) }
     var view by remember { mutableStateOf("overview") }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    var manageJob by remember { mutableStateOf<JobStatusResponse?>(null) }
+    var exportCsv by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         try {
@@ -1635,52 +1907,61 @@ fun AdminConsole(repository: JobRepository, onLogout: () -> Unit) {
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet(containerColor = PureBlack) {
-                Spacer(Modifier.height(24.dp))
-                Text("ADMIN PANEL", color = BrandRed, fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 24.dp))
-                Spacer(Modifier.height(8.dp))
-                DrawerItem("Overview", Icons.Default.Dashboard) {
-                    view = "overview"
-                    scope.launch { drawerState.close() }
-                }
-                DrawerItem("Ongoing Jobs", Icons.Default.Timelapse) {
-                    view = "ongoing"
-                    scope.launch { drawerState.close() }
-                }
-                DrawerItem("All Requests", Icons.Default.List) {
-                    view = "all"
-                    scope.launch { drawerState.close() }
-                }
-                DrawerItem("Completed Jobs", Icons.Default.DoneAll) {
-                    view = "completed"
-                    scope.launch { drawerState.close() }
-                }
-                DrawerItem("Drivers Online", Icons.Default.TrendingUp) {
-                    view = "drivers"
-                    scope.launch { drawerState.close() }
-                }
-                DrawerItem("Map View", Icons.Default.Map) {
-                    view = "map"
-                    scope.launch { drawerState.close() }
-                }
-                DrawerItem("Export Logs", Icons.Default.Download) {
-                    scope.launch { drawerState.close() }
-                    scope.launch {
-                        try {
-                            val response = repository.adminExport()
-                            if (response.isSuccessful && response.body() != null) {
-                                exportCsv = response.body()!!.csv
-                            } else {
-                                snackbarHostState.showSnackbar("Export failed: ${response.code()}")
+            ModalDrawerSheet {
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .widthIn(max = 280.dp)
+                        .background(PureBlack)
+                        .padding(horizontal = 12.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Spacer(Modifier.height(24.dp))
+                    Text("ADMIN PANEL", color = BrandRed, fontWeight = FontWeight.Black)
+                    Spacer(Modifier.height(8.dp))
+                    DrawerItem("Overview", Icons.Default.Dashboard) {
+                        view = "overview"
+                        scope.launch { drawerState.close() }
+                    }
+                    DrawerItem("Ongoing Jobs", Icons.Default.Timelapse) {
+                        view = "ongoing"
+                        scope.launch { drawerState.close() }
+                    }
+                    DrawerItem("All Requests", Icons.Default.List) {
+                        view = "all"
+                        scope.launch { drawerState.close() }
+                    }
+                    DrawerItem("Completed Jobs", Icons.Default.DoneAll) {
+                        view = "completed"
+                        scope.launch { drawerState.close() }
+                    }
+                    DrawerItem("Drivers Online", Icons.Default.TrendingUp) {
+                        view = "drivers"
+                        scope.launch { drawerState.close() }
+                    }
+                    DrawerItem("Map View", Icons.Default.Map) {
+                        view = "map"
+                        scope.launch { drawerState.close() }
+                    }
+                    DrawerItem("Export Logs", Icons.Default.Download) {
+                        scope.launch { drawerState.close() }
+                        scope.launch {
+                            try {
+                                val response = repository.adminExport()
+                                if (response.isSuccessful && response.body() != null) {
+                                    exportCsv = response.body()!!.csv
+                                } else {
+                                    snackbarHostState.showSnackbar("Export failed: ${response.code()}")
+                                }
+                            } catch (e: Exception) {
+                                snackbarHostState.showSnackbar(e.localizedMessage ?: "Export failed")
                             }
-                        } catch (e: Exception) {
-                            snackbarHostState.showSnackbar(e.localizedMessage ?: "Export failed")
                         }
                     }
-                }
-                DrawerItem("Sign Out", Icons.AutoMirrored.Filled.Logout) {
-                    scope.launch { drawerState.close() }
-                    onLogout()
+                    DrawerItem("Sign Out", Icons.AutoMirrored.Filled.Logout) {
+                        scope.launch { drawerState.close() }
+                        onLogout()
+                    }
                 }
             }
         }
@@ -1702,8 +1983,9 @@ fun AdminConsole(repository: JobRepository, onLogout: () -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         "SYSTEM ADMINISTRATION",
-                        color = Color.White,
-                        fontWeight = FontWeight.Black
+                        color = BrandRed,
+                        fontWeight = FontWeight.Black,
+                        fontSize = ScreenTitleSize
                     )
                     Spacer(Modifier.weight(1f))
                     IconButton(onClick = { refresh() }) {
@@ -1899,7 +2181,7 @@ fun EmergencyServicesScreen(supportLine: String) {
     )
 
     Column(Modifier.fillMaxSize().background(PureBlack).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("EMERGENCY SUPPORT", color = Color.White, fontWeight = FontWeight.Black, fontSize = 22.sp)
+        Text("EMERGENCY SUPPORT", color = BrandRed, fontWeight = FontWeight.Black, fontSize = ScreenTitleSize)
         Spacer(Modifier.height(16.dp))
         Text("Operations hotline", color = Color.Gray)
         Spacer(Modifier.height(8.dp))
