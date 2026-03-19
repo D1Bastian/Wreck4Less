@@ -1,0 +1,32 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400">
+  <defs>
+    <linearGradient id="redGlow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FF2A2A"/>
+      <stop offset="100%" stop-color="#B30000"/>
+    </linearGradient>
+    <radialGradient id="spot" cx="80%" cy="20%" r="60%">
+      <stop offset="0%" stop-color="#1B1B1B"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="400" fill="url(#spot)"/>
+  <rect x="40" y="50" width="1120" height="300" rx="36" fill="#0C0C0C" stroke="#1E1E1E" stroke-width="2"/>
+  <rect x="80" y="90" width="520" height="220" rx="28" fill="url(#redGlow)"/>
+  <text x="120" y="170" font-family="Arial Black, Arial, sans-serif" font-size="60" fill="#000000">REQUEST A</text>
+  <text x="120" y="235" font-family="Arial Black, Arial, sans-serif" font-size="60" fill="#000000">WRECK</text>
+  <text x="120" y="275" font-family="Arial, sans-serif" font-size="18" fill="#200000">Private dispatch for drivers, customers, and admins</text>
+  <text x="650" y="150" font-family="Arial Black, Arial, sans-serif" font-size="52" fill="#FFFFFF" letter-spacing="2">WRECK4LESS</text>
+  <text x="650" y="195" font-family="Arial, sans-serif" font-size="18" fill="#BDBDBD">Fleet control, live tracking, and emergency support</text>
+  <g transform="translate(650 230)">
+    <rect x="0" y="0" width="210" height="70" rx="18" fill="#151515" stroke="#2A2A2A"/>
+    <text x="105" y="42" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="16" fill="#FF2A2A">ADMIN</text>
+  </g>
+  <g transform="translate(880 230)">
+    <rect x="0" y="0" width="210" height="70" rx="18" fill="#151515" stroke="#2A2A2A"/>
+    <text x="105" y="42" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="16" fill="#FF2A2A">DRIVER</text>
+  </g>
+  <g transform="translate(650 310)">
+    <rect x="0" y="0" width="440" height="50" rx="16" fill="#151515" stroke="#2A2A2A"/>
+    <text x="220" y="32" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#BDBDBD">Customer portal • Requests • Payments • Maps</text>
+  </g>
+</svg>
