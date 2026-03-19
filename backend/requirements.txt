@@ -4,3 +4,5 @@ python-dotenv
 pydantic
 SQLAlchemy
 psycopg2-binary
+PyJWT
+email-validator

@@ -7,9 +7,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 // Set of Material typography styles to start with
+private val AppFontFamily = FontFamily.SansSerif
+
 val Typography = Typography(
+    defaultFontFamily = AppFontFamily,
     bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
+        fontFamily = AppFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
         lineHeight = 24.sp,

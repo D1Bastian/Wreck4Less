@@ -23,8 +23,16 @@ CREATE TABLE dispatch_requests (
     vehicle_year VARCHAR(4) NOT NULL,
     damage_report TEXT,
     location_label TEXT,
+    location_lat DOUBLE PRECISION,
+    location_lng DOUBLE PRECISION,
     status TEXT DEFAULT 'AWAITING_OPS',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    approved_rate DECIMAL(10, 2) DEFAULT 0.0,
+    driver_id UUID REFERENCES users(id),
+    driver_lat DOUBLE PRECISION,
+    driver_lng DOUBLE PRECISION,
+    payment_method TEXT,
+    cancel_reason TEXT
 );
 
 -- 4. Evidence Imagery

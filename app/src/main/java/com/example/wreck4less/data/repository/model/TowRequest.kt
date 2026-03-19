@@ -1,4 +1,4 @@
-package com.example.wreck4less.data.repository.model
-
-class TowRequest {
-}
+data class TowRequest(
+    val customer_name: String,
+    val location: String
+)

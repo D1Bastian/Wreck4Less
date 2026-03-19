@@ -1,30 +1,62 @@
-package com.example.wreck4less.ui.viewmodel
+package com.example.wreck4less.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.wreck4less.data.model.WreckIntel
+import com.example.wreck4less.data.model.WreckSubmission
 import com.example.wreck4less.data.repository.JobRepository
-import com.example.wreck4less.data.repository.TowRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class JobViewModel(private val repository: JobRepository) : ViewModel() {
-    private val _uiState = MutableStateFlow<String>("Idle")
-    val uiState: StateFlow<String> = _uiState
+sealed class UiState {
+    object Idle : UiState()
+    object Loading : UiState()
+    data class Success(val data: com.example.wreck4less.data.model.WreckResponse) : UiState()
+    data class Error(val message: String) : UiState()
+}
 
-    fun requestTow(customerId: String, lat: Double, lng: Double, address: String) {
+class JobViewModel : ViewModel() {
+
+    private val repository = JobRepository()
+
+    private val _state = MutableStateFlow<UiState>(UiState.Idle)
+    val state: StateFlow<UiState> = _state
+
+    fun submitWreck(
+        make: String,
+        model: String,
+        year: String,
+        damage: String,
+        location: String
+    ) {
         viewModelScope.launch {
-            _uiState.value = "Requesting..."
+
+            _state.value = UiState.Loading
+
             try {
-                val request = TowRequest(customer_id = customerId, lat = lat, lng = lng, address = address)
-                val response = repository.createJob(request)
-                if (response.isSuccessful) {
-                    _uiState.value = "Searching for Drivers..."
+
+                val submission = WreckSubmission(
+                    intel = WreckIntel(
+                        make = make,
+                        model = model,
+                        year = year,
+                        damage_description = damage,
+                        image_keys = emptyList(),
+                        location_label = location
+                    )
+                )
+
+                val response = repository.submitWreck(submission)
+
+                if (response.isSuccessful && response.body() != null) {
+                    _state.value = UiState.Success(response.body()!!)
                 } else {
-                    _uiState.value = "Error: ${response.code()}"
+                    _state.value = UiState.Error("Server error: ${response.code()}")
                 }
+
             } catch (e: Exception) {
-                _uiState.value = "Network Failure"
+                _state.value = UiState.Error(e.localizedMessage ?: "Network error")
             }
         }
     }

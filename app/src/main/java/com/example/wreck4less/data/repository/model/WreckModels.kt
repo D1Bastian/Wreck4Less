@@ -1,4 +1,23 @@
-package com.example.wreck4less.data.repository.model
+package com.example.wreck4less.data.model
 
-class WreckModels {
-}
+data class WreckIntel(
+    val make: String,
+    val model: String,
+    val year: String,
+    val damage_description: String,
+    val image_keys: List<String>,
+    val location_label: String,
+    val location_lat: Double? = null,
+    val location_lng: Double? = null
+)
+
+data class WreckSubmission(
+    val intel: WreckIntel
+)
+
+data class WreckResponse(
+    val job_id: String,
+    val status: String,
+    val ops_timer: String,
+    val support_line: String
+)
