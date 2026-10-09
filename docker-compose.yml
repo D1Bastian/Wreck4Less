@@ -1,0 +1,62 @@
+services:
+  # PostgreSQL Database Service
+  db:
+    image: postgres:15-alpine
+    container_name: wreck4less-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-wreck4less}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-wreck4less}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend Service
+  backend:
+    container_name: wreck4less-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-wreck4less}
+      JWT_SECRET: ${JWT_SECRET:-dev-change-me}
+      JWT_ISSUER: ${JWT_ISSUER:-wreck4less}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-wreck4less-mobile}
+      JWT_EXPIRES_MIN: ${JWT_EXPIRES_MIN:-120}
+      HOST: 0.0.0.0
+      PORT: 8000
+    volumes:
+      # Mount backend directory for hot-reloading during development
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+
+  # Optional Web UI for Database Management (run with: docker compose --profile tools up)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: wreck4less-pgadmin
+    restart: unless-stopped
+    profiles:
+      - tools
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@wreck4less.test}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
